@@ -1,0 +1,190 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}
+    {% if query %}
+        Поиск: {{ query }} | Каталог продукции | ИП Поддубская Е.И.
+    {% elif category %}
+        {{ category.name }} — каталог, цены в Гомеле | ИП Поддубская Е.И.
+    {% else %}
+        Каталог продукции | ИП Поддубская Е.И.
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="container" style="padding-top: 20px; padding-bottom: 40px;">
+
+    <!-- Хлебные крошки -->
+    <div class="breadcrumbs">
+        <a href="{% url 'home' %}">Главная</a>
+        <span>/</span>
+        {% if category %}
+            <a href="{% url 'catalog' %}">Каталог</a>
+            {% if category.parent %}
+                <span>/</span>
+                <a href="{% url 'category_detail' category.parent.slug %}">{{ category.parent.name }}</a>
+            {% endif %}
+            <span>/</span>
+            <strong>{{ category.name }}</strong>
+        {% elif query %}
+            <a href="{% url 'catalog' %}">Каталог</a>
+            <span>/</span>
+            <strong>Поиск: «{{ query }}»</strong>
+        {% else %}
+            <strong>Каталог продукции</strong>
+        {% endif %}
+    </div>
+
+    <div class="catalog-layout">
+        <!-- Боковой сайдбар категорий -->
+        <aside class="catalog-sidebar">
+            <div class="sidebar-box">
+                <h3 class="sidebar-heading">Категории</h3>
+                <ul class="sidebar-categories">
+                    <li class="{% if not category and not query %}active{% endif %}">
+                        <a href="{% url 'catalog' %}"><strong>Все категории</strong></a>
+                    </li>
+                    {% for cat in categories %}
+                    <li class="{% if category and category.slug == cat.slug or category.parent.slug == cat.slug %}active-parent{% endif %}">
+                        <a href="{% url 'category_detail' cat.slug %}" class="{% if category and category.slug == cat.slug %}active-cat{% endif %}">
+                            {{ cat.name }}
+                        </a>
+                        {% if cat.children.all %}
+                        <ul class="sidebar-subcategories">
+                            {% for sub in cat.children.all %}
+                            <li>
+                                <a href="{% url 'category_detail' sub.slug %}" class="{% if category and category.slug == sub.slug %}active-sub{% endif %}">
+                                    — {{ sub.name }}
+                                </a>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                        {% endif %}
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+
+            <!-- Фильтр по наличию -->
+            <div class="sidebar-box">
+                <h3 class="sidebar-heading">Наличие</h3>
+                <form method="get" class="filter-availability-form">
+                    {% if query %}<input type="hidden" name="q" value="{{ query }}">{% endif %}
+                    {% if current_sort %}<input type="hidden" name="sort" value="{{ current_sort }}">{% endif %}
+                    <label class="filter-radio">
+                        <input type="radio" name="availability" value="" {% if not availability %}checked{% endif %} onchange="this.form.submit()">
+                        Все товары
+                    </label>
+                    <label class="filter-radio">
+                        <input type="radio" name="availability" value="in_stock" {% if availability == 'in_stock' %}checked{% endif %} onchange="this.form.submit()">
+                        В наличии
+                    </label>
+                    <label class="filter-radio">
+                        <input type="radio" name="availability" value="on_order" {% if availability == 'on_order' %}checked{% endif %} onchange="this.form.submit()">
+                        Под заказ
+                    </label>
+                </form>
+            </div>
+        </aside>
+
+        <!-- Основная колонка с товарами -->
+        <main class="catalog-content">
+            <div class="catalog-top-bar">
+                <h1 class="catalog-page-title">
+                    {% if query %}
+                        Поиск: «{{ query }}»
+                    {% elif category %}
+                        {{ category.name }}
+                    {% else %}
+                        Все товары
+                    {% endif %}
+                    <span class="total-products-badge">({{ total_count }})</span>
+                </h1>
+
+                <!-- Сортировка -->
+                <form method="get" class="catalog-sorting">
+                    {% if query %}<input type="hidden" name="q" value="{{ query }}">{% endif %}
+                    {% if availability %}<input type="hidden" name="availability" value="{{ availability }}">{% endif %}
+                    <label for="sortSelect">Сортировка:</label>
+                    <select name="sort" id="sortSelect" onchange="this.form.submit()">
+                        <option value="newest" {% if current_sort == 'newest' %}selected{% endif %}>Новые</option>
+                        <option value="price_asc" {% if current_sort == 'price_asc' %}selected{% endif %}>Сначала дешевле</option>
+                        <option value="price_desc" {% if current_sort == 'price_desc' %}selected{% endif %}>Сначала дороже</option>
+                        <option value="title" {% if current_sort == 'title' %}selected{% endif %}>По названию</option>
+                    </select>
+                </form>
+            </div>
+
+            <!-- Список товаров -->
+            {% if products %}
+            <div class="products-grid">
+                {% for product in products %}
+                <div class="product-card">
+                    <div>
+                        <a href="{{ product.get_absolute_url }}">
+                            <div class="product-image">
+                                {% if product.image %}
+                                <img src="{{ product.image.url }}" alt="{{ product.title }}" loading="lazy" decoding="async">
+                                {% else %}
+                                <img src="{% static 'img/default-image.jpg' %}" alt="{{ product.title }}" loading="lazy" decoding="async">
+                                {% endif %}
+                            </div>
+                        </a>
+
+                        <div class="product-info">
+                            <span class="product-category">{{ product.category.name }}</span>
+                            <h4 class="product-title">
+                                <a href="{{ product.get_absolute_url }}">{{ product.title }}</a>
+                            </h4>
+
+                            <div class="product-availability {{ product.availability_css_class }}">
+                                {% if product.is_available %}
+                                    <i class="fa fa-check-circle"></i>
+                                {% elif product.is_on_order %}
+                                    <i class="fa fa-clock-o"></i>
+                                {% endif %}
+                                {{ product.availability_text }}
+                            </div>
+
+                            <div class="product-price">
+                                {{ product.price }} руб. <span>/ {{ product.get_unit_display }}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <a href="{{ product.get_absolute_url }}" class="btn btn-dark">Подробнее</a>
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- Пагинация -->
+            {% if page_obj.has_other_pages %}
+            <div class="catalog-pagination">
+                {% if page_obj.has_previous %}
+                    <a href="?page={{ page_obj.previous_page_number }}{% if query %}&q={{ query }}{% endif %}{% if current_sort %}&sort={{ current_sort }}{% endif %}{% if availability %}&availability={{ availability }}{% endif %}" class="page-btn">&laquo;</a>
+                {% endif %}
+
+                {% for num in page_obj.paginator.page_range %}
+                    {% if page_obj.number == num %}
+                        <span class="page-btn current">{{ num }}</span>
+                    {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                        <a href="?page={{ num }}{% if query %}&q={{ query }}{% endif %}{% if current_sort %}&sort={{ current_sort }}{% endif %}{% if availability %}&availability={{ availability }}{% endif %}" class="page-btn">{{ num }}</a>
+                    {% endif %}
+                {% endfor %}
+
+                {% if page_obj.has_next %}
+                    <a href="?page={{ page_obj.next_page_number }}{% if query %}&q={{ query }}{% endif %}{% if current_sort %}&sort={{ current_sort }}{% endif %}{% if availability %}&availability={{ availability }}{% endif %}" class="page-btn">&raquo;</a>
+                {% endif %}
+            </div>
+            {% endif %}
+
+            {% else %}
+            <div class="no-products">
+                <p>Товары в этом разделе не найдены.</p>
+                <a href="{% url 'catalog' %}" class="btn btn-success">Перейти ко всем товарам</a>
+            </div>
+            {% endif %}
+        </main>
+    </div>
+</div>
+{% endblock %}

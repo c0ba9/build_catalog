@@ -1,0 +1,276 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ product.title }} — купить в Гомеле | ИП Поддубская Е.И.{% endblock %}
+
+{% block content %}
+<div class="container" style="padding-top: 20px; padding-bottom: 40px;">
+
+    <!-- Хлебные крошки -->
+    <div class="breadcrumbs">
+        <a href="{% url 'home' %}">Главная</a>
+        <span>/</span>
+        <a href="{% url 'catalog' %}">Каталог</a>
+        {% if category.parent %}
+            <span>/</span>
+            <a href="{% url 'category_detail' category.parent.slug %}">{{ category.parent.name }}</a>
+        {% endif %}
+        <span>/</span>
+        <a href="{% url 'category_detail' category.slug %}">{{ category.name }}</a>
+        <span>/</span>
+        <strong>{{ product.title }}</strong>
+    </div>
+
+    <!-- Карточка товара -->
+    <div class="product-detail-box">
+        <div class="product-detail-flex">
+            <!-- Фото и галерея слева (с оптимизацией под дополнительные фото и лайтбоксом) -->
+            <div class="product-gallery-side">
+                <div class="product-main-photo" onclick="openLightbox()" title="Нажмите для увеличения">
+                    {% if product.image %}
+                    <img id="mainImage" src="{{ product.image.url }}" alt="{{ product.title }}" fetchpriority="high" decoding="async">
+                    {% else %}
+                    <img id="mainImage" src="{% static 'img/default-image.jpg' %}" alt="{{ product.title }}" fetchpriority="high" decoding="async">
+                    {% endif %}
+                    
+                    <span class="gallery-zoom-badge">
+                        <i class="fa fa-search-plus"></i> Увеличить
+                    </span>
+
+                    {% if product.images.all %}
+                    <span class="gallery-counter-badge" id="galleryCounter">
+                        Фото 1 из {{ product.images.all|length|add:1 }}
+                    </span>
+                    <button type="button" class="gallery-arrow-btn prev" onclick="prevImage(event)" title="Предыдущее фото">
+                        <i class="fa fa-chevron-left"></i>
+                    </button>
+                    <button type="button" class="gallery-arrow-btn next" onclick="nextImage(event)" title="Следующее фото">
+                        <i class="fa fa-chevron-right"></i>
+                    </button>
+                    {% endif %}
+                </div>
+
+                {% if product.images.all %}
+                <div class="product-gallery-thumbs" id="thumbsRail">
+                    {% if product.image %}
+                    <div class="thumb active" onclick="selectImage(0, '{{ product.image.url }}', this)" title="Главное фото">
+                        <img src="{{ product.image.url }}" alt="{{ product.title }}" loading="lazy" decoding="async">
+                    </div>
+                    {% endif %}
+                    {% for item in product.images.all %}
+                    <div class="thumb" onclick="selectImage({{ forloop.counter }}, '{{ item.image.url }}', this)" title="Дополнительное фото {{ forloop.counter }}">
+                        <img src="{{ item.image.url }}" alt="{{ product.title }} - фото {{ forloop.counter }}" loading="lazy" decoding="async">
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Инфо и заказ справа -->
+            <div class="product-info-side">
+                <div class="product-category-tag">
+                    <a href="{% url 'category_detail' category.slug %}">{{ category.name }}</a>
+                </div>
+
+                <h1 class="product-single-title">{{ product.title }}</h1>
+
+                <!-- Статус наличия: В наличии (зеленый) / Под заказ (янтарный) -->
+                <div class="product-availability-status {{ product.availability_css_class }}">
+                    {% if product.is_available %}
+                        <i class="fa fa-check-circle"></i> {{ product.availability_text }}
+                    {% elif product.is_on_order %}
+                        <i class="fa fa-clock-o"></i> {{ product.availability_text }}
+                    {% else %}
+                        <i class="fa fa-info-circle"></i> {{ product.availability_text }}
+                    {% endif %}
+                </div>
+
+                <div class="product-single-price">
+                    {{ product.price }} руб. <span>/ {{ product.get_unit_display }}</span>
+                </div>
+
+                <!-- Контактная плашка для заказа -->
+                <div class="order-contact-panel">
+                    <h4>Консультация и заказ:</h4>
+                    <p class="order-phone">
+                        <i class="fa fa-phone"></i> <a href="tel:+375296777746">+375 (29) 677-77-46</a>
+                    </p>
+                    <p class="order-note">
+                        Свяжитесь с нами для уточнения наличия на складе, нарезки по размерам и расчета доборных элементов.
+                    </p>
+                    <div class="order-details-mini">
+                        <div><i class="fa fa-map-marker"></i> Склад: г. Гомель, ул. Текстильная 10Б</div>
+                        <div><i class="fa fa-truck"></i> Доставка по Гомелю и области</div>
+                        <div><i class="fa fa-user"></i> Контактное лицо: Виктор Леонидович</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Описание товара из БД -->
+        <div class="product-description-block">
+            <h3>Описание</h3>
+            <div class="product-description-text">
+                {% if product.description %}
+                    {{ product.description|linebreaks }}
+                {% else %}
+                    <p>Описание товара уточняйте у менеджера по телефону +375 (29) 677-77-46.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Сопутствующие товары -->
+    {% if related_products %}
+    <div class="related-section" style="margin-top: 40px;">
+        <h2 class="section-title">Другие товары из раздела «{{ category.name }}»</h2>
+        <div class="products-grid">
+            {% for item in related_products %}
+            <div class="product-card">
+                <div>
+                    <a href="{{ item.get_absolute_url }}">
+                        <div class="product-image">
+                            {% if item.image %}
+                            <img src="{{ item.image.url }}" alt="{{ item.title }}" loading="lazy" decoding="async">
+                            {% else %}
+                            <img src="{% static 'img/default-image.jpg' %}" alt="{{ item.title }}" loading="lazy" decoding="async">
+                            {% endif %}
+                        </div>
+                    </a>
+
+                    <div class="product-info">
+                        <span class="product-category">{{ item.category.name }}</span>
+                        <h4 class="product-title">
+                            <a href="{{ item.get_absolute_url }}">{{ item.title }}</a>
+                        </h4>
+
+                        <div class="product-availability {{ item.availability_css_class }}">
+                            {% if item.is_available %}
+                                <i class="fa fa-check-circle"></i>
+                            {% elif item.is_on_order %}
+                                <i class="fa fa-clock-o"></i>
+                            {% endif %}
+                            {{ item.availability_text }}
+                        </div>
+
+                        <div class="product-price">
+                            {{ item.price }} руб. <span>/ {{ item.get_unit_display }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <a href="{{ item.get_absolute_url }}" class="btn btn-dark">Подробнее</a>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+</div>
+
+<!-- Полноэкранный Lightbox для просмотра фото в оригинальном качестве -->
+<div id="imageLightbox" class="image-lightbox-modal" onclick="closeLightbox(event)">
+    <div class="lightbox-content" onclick="event.stopPropagation()">
+        <button class="lightbox-close-btn" onclick="closeLightbox()" title="Закрыть (Esc)">&times;</button>
+        <img id="lightboxImage" src="" alt="{{ product.title }}">
+        <div class="lightbox-caption">
+            <span id="lightboxCounter">1 / 1</span> &bull; {{ product.title }}
+        </div>
+        <button class="lightbox-arrow prev" onclick="prevLightboxImage()" title="Предыдущее (Стрелка влево)">&#10094;</button>
+        <button class="lightbox-arrow next" onclick="nextLightboxImage()" title="Следующее (Стрелка вправо)">&#10095;</button>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+// Список всех URL фото товара для быстрой галереи и полноэкранного просмотра
+var productImages = [
+    {% if product.image %}"{{ product.image.url }}",{% endif %}
+    {% for item in product.images.all %}"{{ item.image.url }}",{% endfor %}
+];
+var currentImageIndex = 0;
+
+function updateGalleryView(index) {
+    if (!productImages.length) return;
+    if (index < 0) index = productImages.length - 1;
+    if (index >= productImages.length) index = 0;
+    currentImageIndex = index;
+
+    var mainImg = document.getElementById('mainImage');
+    if (mainImg) mainImg.src = productImages[currentImageIndex];
+
+    var counter = document.getElementById('galleryCounter');
+    if (counter) {
+        counter.textContent = 'Фото ' + (currentImageIndex + 1) + ' из ' + productImages.length;
+    }
+
+    var thumbs = document.querySelectorAll('.product-gallery-thumbs .thumb');
+    thumbs.forEach(function(thumb, i) {
+        if (i === currentImageIndex) {
+            thumb.classList.add('active');
+            thumb.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+        } else {
+            thumb.classList.remove('active');
+        }
+    });
+
+    var lightboxImg = document.getElementById('lightboxImage');
+    if (lightboxImg) lightboxImg.src = productImages[currentImageIndex];
+    var lightboxCounter = document.getElementById('lightboxCounter');
+    if (lightboxCounter) {
+        lightboxCounter.textContent = (currentImageIndex + 1) + ' / ' + productImages.length;
+    }
+}
+
+function selectImage(index, src, el) {
+    updateGalleryView(index);
+}
+
+function nextImage(event) {
+    if (event) event.stopPropagation();
+    updateGalleryView(currentImageIndex + 1);
+}
+
+function prevImage(event) {
+    if (event) event.stopPropagation();
+    updateGalleryView(currentImageIndex - 1);
+}
+
+function openLightbox() {
+    if (!productImages.length) return;
+    var modal = document.getElementById('imageLightbox');
+    updateGalleryView(currentImageIndex);
+    if (modal) {
+        modal.classList.add('open');
+        document.body.style.overflow = 'hidden';
+    }
+}
+
+function closeLightbox(event) {
+    var modal = document.getElementById('imageLightbox');
+    if (modal) {
+        modal.classList.remove('open');
+        document.body.style.overflow = '';
+    }
+}
+
+function nextLightboxImage() {
+    updateGalleryView(currentImageIndex + 1);
+}
+
+function prevLightboxImage() {
+    updateGalleryView(currentImageIndex - 1);
+}
+
+// Навигация с клавиатуры (Escape, Стрелка влево, Стрелка вправо)
+document.addEventListener('keydown', function(e) {
+    var modal = document.getElementById('imageLightbox');
+    if (modal && modal.classList.contains('open')) {
+        if (e.key === 'Escape') closeLightbox();
+        if (e.key === 'ArrowRight') nextLightboxImage();
+        if (e.key === 'ArrowLeft') prevLightboxImage();
+    }
+});
+</script>
+{% endblock %}

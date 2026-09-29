@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Контакты | ИП Поддубская Е.И. в Гомеле — ул. Текстильная 10Б{% endblock %}
+
+{% block content %}
+<div class="container site-page-container">
+    <nav class="breadcrumbs">
+        <a href="{% url 'home' %}"><i class="fa fa-home"></i> Главная</a>
+        <span class="bc-sep">/</span>
+        <span class="bc-current">Контакты</span>
+    </nav>
+
+    <div class="page-content-card">
+        <h1 class="page-title">Контактная информация</h1>
+
+        <div class="contacts-grid-layout">
+            <div class="contact-info-block">
+                <h3>Свяжитесь с нами:</h3>
+                
+                <div class="contact-item">
+                    <div class="c-icon"><i class="fa fa-phone"></i></div>
+                    <div>
+                        <div class="c-label">Телефон / Viber:</div>
+                        <a href="tel:+375296777746" class="c-val-main">+375 (29) 677-77-46</a>
+                        <div class="c-sub">Контактное лицо: <strong>Виктор Леонидович</strong></div>
+                    </div>
+                </div>
+
+                <div class="contact-item">
+                    <div class="c-icon"><i class="fa fa-envelope-o"></i></div>
+                    <div>
+                        <div class="c-label">Электронная почта:</div>
+                        <a href="mailto:sm6777746@mail.ru" class="c-val">sm6777746@mail.ru</a>
+                    </div>
+                </div>
+
+                <div class="contact-item">
+                    <div class="c-icon"><i class="fa fa-map-marker"></i></div>
+                    <div>
+                        <div class="c-label">Адрес склада и отгрузки:</div>
+                        <div class="c-val">г. Гомель, ул. Текстильная 10Б, Беларусь</div>
+                    </div>
+                </div>
+
+                <div class="contact-item">
+                    <div class="c-icon"><i class="fa fa-clock-o"></i></div>
+                    <div>
+                        <div class="c-label">Время работы:</div>
+                        <div class="c-val">Понедельник — Пятница: <strong>08:30 — 17:30</strong></div>
+                        <div class="c-sub">Суббота, Воскресенье: выходной</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="contact-schedule-block">
+                <h3>Реквизиты организации:</h3>
+                <div class="legal-mini">
+                    <p>ИП Поддубская Елена Ивановна</p>
+                    <p>УНП 491413905</p>
+                    <p>г. Гомель, ул. Пушкина, д.13, кв.7</p>
+                    <p>Регистрация в Торговом реестре: 08.12.2023 № 569431</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

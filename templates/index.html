@@ -1,0 +1,133 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<section class="hero-banner">
+    <div class="container">
+        <h1>Кровельные и стеновые материалы в Гомеле</h1>
+        <p>Качественные материалы напрямую от производителей. Расчет, доставка и гарантия.</p>
+        <a href="{% url 'catalog' %}" class="btn btn-success">Перейти в каталог</a>
+    </div>
+</section>
+
+<!-- Категории продукции (ТОЧНО КАК В ВАШЕМ МАКЕТЕ И БД) -->
+<section class="categories-section container" id="catalog">
+    <h2 class="section-title">Категории продукции</h2>
+    
+    <div class="category-grid">
+        {% for category in categories %}
+        <div class="category-card">
+            <h3>
+                <a href="{% url 'category_detail' category.slug %}" class="category-main-title">
+                    {{ category.name }}
+                </a>
+            </h3>
+
+            {% if category.children.all %}
+            <ul>
+                {% for subcat in category.children.all %}
+                <li>
+                    <a href="{% url 'category_detail' subcat.slug %}">— {{ subcat.name }}</a>
+                </li>
+                {% endfor %}
+            </ul>
+            {% endif %}
+        </div>
+        {% empty %}
+        <p>Категории пока не добавлены.</p>
+        {% endfor %}
+    </div>
+</section>
+
+<!-- Популярные товары -->
+{% if featured_products %}
+<section class="featured-products container">
+    <h2 class="section-title">Популярные товары</h2>
+    <div class="products-grid">
+        {% for product in featured_products %}
+        <div class="product-card">
+            <div>
+                <a href="{{ product.get_absolute_url }}">
+                    <div class="product-image">
+                        {% if product.image %}
+                        <img src="{{ product.image.url }}" alt="{{ product.title }}" loading="lazy" decoding="async">
+                        {% else %}
+                        <img src="{% static 'img/default-image.jpg' %}" alt="{{ product.title }}" loading="lazy" decoding="async">
+                        {% endif %}
+                    </div>
+                </a>
+
+                <div class="product-info">
+                    <span class="product-category">{{ product.category.name }}</span>
+                    <h4 class="product-title">
+                        <a href="{{ product.get_absolute_url }}">{{ product.title }}</a>
+                    </h4>
+
+                    <div class="product-availability {{ product.availability_css_class }}">
+                        {% if product.is_available %}
+                            <i class="fa fa-check-circle"></i>
+                        {% elif product.is_on_order %}
+                            <i class="fa fa-clock-o"></i>
+                        {% endif %}
+                        {{ product.availability_text }}
+                    </div>
+
+                    <div class="product-price">
+                        {{ product.price }} руб. <span>/ {{ product.get_unit_display }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <a href="{{ product.get_absolute_url }}" class="btn btn-dark">Подробнее</a>
+        </div>
+        {% endfor %}
+    </div>
+</section>
+{% endif %}
+
+<!-- Свежие поступления -->
+{% if latest_products %}
+<section class="featured-products container" style="margin-top: 30px;">
+    <h2 class="section-title">Свежие поступления</h2>
+    <div class="products-grid">
+        {% for product in latest_products %}
+        <div class="product-card">
+            <div>
+                <a href="{{ product.get_absolute_url }}">
+                    <div class="product-image">
+                        {% if product.image %}
+                        <img src="{{ product.image.url }}" alt="{{ product.title }}" loading="lazy" decoding="async">
+                        {% else %}
+                        <img src="{% static 'img/default-image.jpg' %}" alt="{{ product.title }}" loading="lazy" decoding="async">
+                        {% endif %}
+                    </div>
+                </a>
+
+                <div class="product-info">
+                    <span class="product-category">{{ product.category.name }}</span>
+                    <h4 class="product-title">
+                        <a href="{{ product.get_absolute_url }}">{{ product.title }}</a>
+                    </h4>
+
+                    <div class="product-availability {{ product.availability_css_class }}">
+                        {% if product.is_available %}
+                            <i class="fa fa-check-circle"></i>
+                        {% elif product.is_on_order %}
+                            <i class="fa fa-clock-o"></i>
+                        {% endif %}
+                        {{ product.availability_text }}
+                    </div>
+
+                    <div class="product-price">
+                        {{ product.price }} руб. <span>/ {{ product.get_unit_display }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <a href="{{ product.get_absolute_url }}" class="btn btn-dark">Подробнее</a>
+        </div>
+        {% endfor %}
+    </div>
+</section>
+{% endif %}
+{% endblock %}
