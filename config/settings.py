@@ -27,6 +27,7 @@ DEBUG = True
 
 ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '.loca.lt']
 
+CSRF_TRUSTED_ORIGINS = ['https://*.loca.lt']
 
 # Application definition
 

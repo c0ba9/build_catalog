@@ -35,6 +35,144 @@
         {% endif %}
     </div>
 
+    {% if is_root_catalog %}
+    <!-- 1. ГЛАВНЫЙ КАТАЛОГ: Плитки родительских категорий с фото -->
+    <div class="category-portal-header">
+        <h1 class="category-portal-page-title">Каталог строительных материалов</h1>
+        <p class="category-portal-subtitle">Выберите интересующий раздел продукции:</p>
+    </div>
+
+    <div class="category-portal-grid">
+        {% for cat in parent_categories %}
+        <a href="{% url 'category_detail' cat.slug %}" class="category-portal-card">
+            <div class="category-portal-thumb">
+                {% if cat.image %}
+                <img src="{{ cat.image.url }}" alt="{{ cat.name }}" loading="lazy" decoding="async">
+                {% else %}
+                <img src="{% static 'img/default-category.jpg' %}" alt="{{ cat.name }}" loading="lazy" decoding="async">
+                {% endif %}
+                {% if cat.children.all %}
+                <span class="category-portal-badge">{{ cat.children.all|length }} раздела</span>
+                {% endif %}
+            </div>
+            <div class="category-portal-info">
+                <h3 class="category-portal-title">{{ cat.name }}</h3>
+                <div class="category-portal-footer">
+                    {% if cat.children.all %}
+                    <span class="category-portal-subtext">Смотреть разделы</span>
+                    {% else %}
+                    <span class="category-portal-subtext">Смотреть товары</span>
+                    {% endif %}
+                    <span class="category-portal-arrow"><i class="fa fa-arrow-right"></i></span>
+                </div>
+            </div>
+        </a>
+        {% endfor %}
+    </div>
+
+    {% elif has_subcategories %}
+    <!-- 2. РОДИТЕЛЬСКАЯ КАТЕГОРИЯ: Плитки подкатегорий с фото -->
+    <div class="category-portal-header">
+        <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; margin-bottom: 6px;">
+            <h1 class="category-portal-page-title" style="margin: 0;">{{ category.name }}</h1>
+            <a href="{% url 'catalog' %}" class="btn btn-outline-secondary" style="font-size: 13px; padding: 6px 14px; text-decoration: none; border: 1px solid #ccc; border-radius: 4px; color: #555; display: inline-flex; align-items: center; gap: 6px;">
+                <i class="fa fa-arrow-left"></i> Все разделы каталога
+            </a>
+        </div>
+        <p class="category-portal-subtitle">Выберите подкатегорию для перехода:</p>
+    </div>
+
+    <div class="category-portal-grid">
+        {% for sub in subcategories %}
+        <a href="{% url 'category_detail' sub.slug %}" class="category-portal-card">
+            <div class="category-portal-thumb">
+                {% if sub.image %}
+                <img src="{{ sub.image.url }}" alt="{{ sub.name }}" loading="lazy" decoding="async">
+                {% else %}
+                <img src="{% static 'img/default-category.jpg' %}" alt="{{ sub.name }}" loading="lazy" decoding="async">
+                {% endif %}
+            </div>
+            <div class="category-portal-info">
+                <h3 class="category-portal-title">{{ sub.name }}</h3>
+                <div class="category-portal-footer">
+                    <span class="category-portal-subtext">Смотреть продукцию</span>
+                    <span class="category-portal-arrow"><i class="fa fa-arrow-right"></i></span>
+                </div>
+            </div>
+        </a>
+        {% endfor %}
+    </div>
+
+    {% if not show_all_products %}
+    <div style="text-align: center; margin: 30px 0 20px;">
+        <a href="?view_all=1" style="display: inline-flex; align-items: center; gap: 8px; padding: 9px 18px; font-size: 13px; font-weight: 600; color: #495057; background: #f8f9fa; border: 1px solid #ced4da; border-radius: 6px; text-decoration: none; transition: all 0.2s;">
+            <i class="fa fa-list"></i> Показать все товары раздела «{{ category.name }}» одним списком
+        </a>
+    </div>
+    {% endif %}
+
+    <!-- Товары раздела под плитками (по запросу или при фильтре) -->
+    {% if show_all_products and products %}
+    <div class="category-products-section" style="margin-top: 30px;">
+        <div class="catalog-top-bar">
+            <h2 class="section-title" style="margin: 0; font-size: 18px;">Все товары раздела «{{ category.name }}»</h2>
+
+            <form method="get" class="catalog-sorting">
+                {% if availability %}<input type="hidden" name="availability" value="{{ availability }}">{% endif %}
+                <label for="sortSelect">Сортировка:</label>
+                <select name="sort" id="sortSelect" onchange="this.form.submit()">
+                    <option value="newest" {% if current_sort == 'newest' %}selected{% endif %}>Новые</option>
+                    <option value="price_asc" {% if current_sort == 'price_asc' %}selected{% endif %}>Сначала дешевле</option>
+                    <option value="price_desc" {% if current_sort == 'price_desc' %}selected{% endif %}>Сначала дороже</option>
+                    <option value="title" {% if current_sort == 'title' %}selected{% endif %}>По названию</option>
+                </select>
+            </form>
+        </div>
+
+        <div class="products-grid">
+            {% for product in products %}
+            <div class="product-card">
+                <div>
+                    <a href="{{ product.get_absolute_url }}">
+                        <div class="product-image">
+                            {% if product.image %}
+                            <img src="{{ product.image.url }}" alt="{{ product.title }}" loading="lazy" decoding="async">
+                            {% else %}
+                            <img src="{% static 'img/default-image.jpg' %}" alt="{{ product.title }}" loading="lazy" decoding="async">
+                            {% endif %}
+                        </div>
+                    </a>
+
+                    <div class="product-info">
+                        <span class="product-category">{{ product.category.name }}</span>
+                        <h4 class="product-title">
+                            <a href="{{ product.get_absolute_url }}">{{ product.title }}</a>
+                        </h4>
+
+                        <div class="product-availability {{ product.availability_css_class }}">
+                            {% if product.is_available %}
+                                <i class="fa fa-check-circle"></i>
+                            {% elif product.is_on_order %}
+                                <i class="fa fa-clock-o"></i>
+                            {% endif %}
+                            {{ product.availability_text }}
+                        </div>
+
+                        <div class="product-price">
+                            {{ product.price }} руб. <span>/ {{ product.get_unit_display }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <a href="{{ product.get_absolute_url }}" class="btn btn-dark">Подробнее</a>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    {% else %}
+    <!-- 3. КОНЕЧНАЯ ПОДКАТЕГОРИЯ ИЛИ ПОИСК: Сайдбар + список товаров -->
     <div class="catalog-layout">
         <!-- Боковой сайдбар категорий -->
         <aside class="catalog-sidebar">
@@ -181,10 +319,11 @@
             {% else %}
             <div class="no-products">
                 <p>Товары в этом разделе не найдены.</p>
-                <a href="{% url 'catalog' %}" class="btn btn-success">Перейти ко всем товарам</a>
+                <a href="{% url 'catalog' %}" class="btn btn-success">Перейти ко всем разделам каталога</a>
             </div>
             {% endif %}
         </main>
     </div>
+    {% endif %}
 </div>
 {% endblock %}

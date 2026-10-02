@@ -8,7 +8,8 @@ def home_view(request):
     """
     Главная страница:
     - Загружает родительские категории с дочерними за 1 оптимизированный запрос
-    - Хиты продаж и свежие поступления (товары в наличии и под заказ)
+    - Хиты продаж (товары в наличии и под заказ)
+    - Секция свежих поступлений убрана по требованию
     """
     parent_categories = Category.objects.filter(parent__isnull=True).prefetch_related('children')
     
@@ -17,17 +18,10 @@ def home_view(request):
         .filter(Q(is_available=True) | Q(is_on_order=True))
         .select_related('category')[:8]
     )
-    
-    latest_products = (
-        Product.objects.filter(Q(is_available=True) | Q(is_on_order=True))
-        .select_related('category')
-        .order_by('-created_at')[:8]
-    )
 
     context = {
         'categories': parent_categories,
         'featured_products': featured_products,
-        'latest_products': latest_products,
     }
     return render(request, 'index.html', context)
 
@@ -35,19 +29,16 @@ def home_view(request):
 def catalog_view(request, category_slug=None):
     """
     Каталог товаров:
-    - Если category_slug не передан -> выводятся ВСЕ товары
-    - Если передана главная категория -> выводятся товары этой категории + всех её подкатегорий
-    - Если передана подкатегория -> выводятся товары только этой подкатегории
-    - Полнотекстовый поиск 'q'
-    - Фильтр по наличию 'availability'
-    - Сортировка 'sort'
-    - Пагинация по 12 товаров
+    - Если category_slug не передан и нет поиска -> открываются плитки родительских категорий с фото
+    - Если передана главная категория с подкатегориями -> открываются плитки подкатегорий с фото
+    - Если передана конечная подкатегория или введен поиск -> выводятся карточки товаров с фильтрами
     """
     categories = Category.objects.filter(parent__isnull=True).prefetch_related('children')
     products = Product.objects.select_related('category', 'category__parent').prefetch_related('images')
     
     current_category = None
     subcategories = []
+    has_subcategories = False
 
     if category_slug:
         current_category = get_object_or_404(
@@ -56,6 +47,7 @@ def catalog_view(request, category_slug=None):
         )
         children = list(current_category.children.all())
         if children:
+            has_subcategories = True
             category_ids = [current_category.id] + [c.id for c in children]
             products = products.filter(category_id__in=category_ids)
             subcategories = children
@@ -66,6 +58,8 @@ def catalog_view(request, category_slug=None):
 
     # Полнотекстовый поиск по строке q (независимый от регистра: строчные, Заглавные, ВСЕ)
     query = request.GET.get('q', '').strip()
+    is_root_catalog = bool(not category_slug and not query)
+    show_all_products = bool(request.GET.get('view_all') == '1' or query)
     if query:
         # Варианты регистра для фразы: строчные, С заглавной, Каждое Слово С Заглавной, ВСЕ ЗАГЛАВНЫЕ
         q_lower = query.lower()
@@ -85,7 +79,7 @@ def catalog_view(request, category_slug=None):
                 Q(category__name__contains=var)
             )
 
-        # Если поисковый запрос из нескольких слов 
+        # Если поисковый запрос из нескольких слов (например: сайдинг брус)
         words = query.split()
         if len(words) > 1:
             words_filter = Q()
@@ -135,13 +129,17 @@ def catalog_view(request, category_slug=None):
     context = {
         'category': current_category,
         'categories': categories,
+        'parent_categories': categories,
         'subcategories': subcategories,
+        'is_root_catalog': is_root_catalog,
+        'has_subcategories': has_subcategories,
         'products': page_obj,
         'page_obj': page_obj,
         'total_count': paginator.count,
         'query': query,
         'current_sort': sort,
         'availability': availability,
+        'show_all_products': show_all_products,
     }
     return render(request, 'catalog.html', context)
 

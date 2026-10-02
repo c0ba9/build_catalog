@@ -9,6 +9,8 @@ def extend_sqlite_functions(sender, connection, **kwargs):
     """
     Обеспечивает корректный регистронезависимый поиск (case-insensitive LIKE)
     для русских букв (кириллицы) в базе данных SQLite.
+    По умолчанию SQLite поддерживает LOWER/LIKE без учета регистра только для ASCII (латиницы).
+    Этот хук добавляет полноценную поддержку регистронезависимости для кириллицы.
     """
     if connection.vendor == 'sqlite':
         def sqlite_like(pattern, string, escape=None):
@@ -19,6 +21,7 @@ def extend_sqlite_functions(sender, connection, **kwargs):
                 pat = pat.replace(escape, '')
             return pat in str(string).lower()
 
+        # Регистрируем 2- и 3-аргументные варианты функции LIKE для SQLite
         connection.connection.create_function('LIKE', 3, sqlite_like)
         connection.connection.create_function('LIKE', 2, lambda pat, s: sqlite_like(pat, s))
         connection.connection.create_function('LOWER', 1, lambda s: str(s).lower() if s is not None else '')
@@ -36,6 +39,7 @@ class Category(models.Model):
         null=True,
         verbose_name='Родительская категория'
     )
+    image = models.ImageField('Изображение (плитка в каталоге)', upload_to='categories/', blank=True, null=True)
 
     class Meta:
         verbose_name = 'Категория'
@@ -48,6 +52,16 @@ class Category(models.Model):
 
     def get_absolute_url(self):
         return reverse('category_detail', kwargs={'category_slug': self.slug})
+
+    @property
+    def get_image_url(self):
+        image = getattr(self, 'image', None)
+        if image and hasattr(image, 'url'):
+            try:
+                return image.url
+            except Exception:
+                return None
+        return None
 
 
 class Product(models.Model):
