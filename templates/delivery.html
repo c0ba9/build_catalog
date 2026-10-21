@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Доставка и оплата | ИП Поддубская Е.И. — Гомель{% endblock %}
+
+{% block content %}
+<div class="container site-page-container">
+    <nav class="breadcrumbs">
+        <a href="{% url 'home' %}"><i class="fa fa-home"></i> Главная</a>
+        <span class="bc-sep">/</span>
+        <span class="bc-current">Доставка и оплата</span>
+    </nav>
+
+    <div class="page-content-card">
+        <h1 class="page-title">Доставка и оплата</h1>
+
+        <div class="text-content">
+            <h3>Условия доставки:</h3>
+            <ul class="info-list">
+                <li>
+                    <strong>Самовывоз со склада:</strong><br>
+                    Вы можете самостоятельно забрать заказ с нашего склада по адресу: <strong>г. Гомель, ул. Текстильная 10Б</strong> в будние дни с 08:30 до 17:30.
+                </li>
+                <li>
+                    <strong>Доставка по Гомелю и Гомельской области:</strong><br>
+                    Осуществляем доставку длинномерных кровельных листов (до 6-7 метров), сайдинга, заборов и утеплителя спецтранспортом прямо на ваш строительный объект.
+                </li>
+            </ul>
+
+            <h3 style="margin-top: 25px;">Способы оплаты:</h3>
+            <ul class="info-list">
+                <li><strong>Наличный расчет:</strong> при получении товара или на складе при оформлении заказа.</li>
+                <li><strong>Банковской картой:</strong> терминал на складе.</li>
+                <li><strong>Безналичный расчет:</strong> для юридических лиц и ИП по выставленному счету (с оформлением всех ТТН).</li>
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}

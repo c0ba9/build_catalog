@@ -1,0 +1,155 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Кровельные и стеновые материалы в Гомеле | ИП Поддубская Е.И.{% endblock %}</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏠</text></svg>">
+    <link rel="stylesheet" href="{% static 'library/Font-Awesome/css/font-awesome.min.css' %}">
+    <link rel="stylesheet" href="{% static 'style.css' %}">
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+    <header id="masthead" class="site-header">
+        <div class="top-header-wrapper">
+            <div class="wrapper">
+                <div class="icon-box-container">
+                    <div class="icon-box">
+                        <div class="icon"><i class="fa fa-volume-control-phone"></i></div>
+                        <a href="tel:+375296777746" class="icon-text-link">+375 29 677 77 46 (Звонок, Viber)</a>
+                    </div>
+                    <div class="icon-box">
+                        <div class="icon"><i class="fa fa-envelope-o"></i></div>
+                        <a href="mailto:sm6777746@mail.ru" class="icon-text-link">sm6777746@mail.ru</a>
+                    </div>
+                    <div class="icon-box">
+                        <div class="icon"><i class="fa fa-map-marker"></i></div>
+                        <span class="icon-text">ул. Текстильная 10Б, Гомель, Беларусь</span>
+                    </div>
+                    <div class="icon-box">
+                        <div class="icon"><i class="fa fa-clock-o"></i></div>
+                        <span class="icon-text">8:30 - 17:30 (Пн - Пт)</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="header-wrapper">
+            <div class="wrapper">
+                <div class="row">
+                    <!-- Аккуратный текстовый логотип с зеленой плашкой ИП -->
+                    <div class="col-md-5">
+                        <div class="site-logo">
+                            <a href="{% url 'home' %}" class="custom-logo-badge-link" rel="home">
+                                <div class="logo-ip-badge">ИП</div>
+                                <div class="logo-text-group">
+                                    <div class="logo-text-title">СТРОИТЕЛЬНЫЕ МАТЕРИАЛЫ</div>
+                                    <div class="logo-text-sub">ИП Поддубская Е.И. • г. Гомель, ул. Текстильная 10Б</div>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+                    <!-- Поисковая строка -->
+                    <div class="col-md-7">
+                        <div class="advance-product-search">
+                            <form role="search" method="get" class="woocommerce-product-search" action="{% url 'catalog' %}">
+                                <input type="search" class="search-field" placeholder="Поиск продукции..." name="q" value="{{ query|default:'' }}">
+                                <button class="fa fa-search searchsubmit" type="submit" title="Поиск"></button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Навигационная панель: кнопка 'Товары и услуги' открывает весь каталог, вкладка 'Весь каталог' убрана -->
+            <div class="navigation-wrapper">
+                <nav id="site-navigation" class="main-navigation">
+                    <div class="header-main-menu wrapper">
+                        <ul class="menu special-menu-wrapper">
+                            <li class="menu-item menu-item-has-children">
+                                <a href="{% url 'catalog' %}" class="special-menu" title="Нажмите, чтобы открыть весь каталог">
+                                    <i class="fa fa-navicon toggle"></i> Товары и услуги
+                                </a>
+                                <ul class="sub-menu special-sub-menu">
+                                    <li class="menu-item menu-all-link">
+                                        <a href="{% url 'catalog' %}"><strong>Все категории каталога &rarr;</strong></a>
+                                    </li>
+                                    {% for category in all_categories %}
+                                    <li class="menu-item {% if category.children.all %}menu-item-has-children{% endif %}">
+                                        <a href="{% url 'category_detail' category.slug %}">{{ category.name }}</a>
+                                        {% if category.children.all %}
+                                        <ul class="sub-menu">
+                                            <li class="menu-item">
+                                                <a href="{% url 'category_detail' category.slug %}"><em>Все {{ category.name|lower }} &rarr;</em></a>
+                                            </li>
+                                            {% for subcat in category.children.all %}
+                                            <li class="menu-item">
+                                                <a href="{% url 'category_detail' subcat.slug %}">{{ subcat.name }}</a>
+                                            </li>
+                                            {% endfor %}
+                                        </ul>
+                                        {% endif %}
+                                    </li>
+                                    {% empty %}
+                                    <li class="menu-item"><a href="{% url 'catalog' %}">Категории отсутствуют</a></li>
+                                    {% endfor %}
+                                </ul>
+                            </li>
+                        </ul>
+                        <!-- Меню без дублирующей вкладки 'Весь каталог' -->
+                        <div class="acmethemes-nav">
+                            <ul class="nav-menu">
+                                <li><a href="{% url 'home' %}">Главная</a></li>
+                                <li><a href="{% url 'about' %}">О нас</a></li>
+                                <li><a href="{% url 'contacts' %}">Контакты</a></li>
+                                <li><a href="{% url 'delivery' %}">Доставка и оплата</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <main id="content" class="site-content">
+        {% block content %}
+        {% endblock %}
+    </main>
+
+    <footer class="custom-footer">
+        <div class="footer-container">
+            <div class="footer-col footer-info">
+                <h3>Информация для покупателя</h3>
+                <p><strong>Индивидуальный предприниматель Поддубская Елена Ивановна</strong></p>
+                <p>246050, г. Гомель, ул. Пушкина, д.13, кв.7</p>
+                <p>УНП: 491413905</p>
+                <p>Дата регистрации в Торговом реестре: 08.12.2023 № 569431</p>
+                <p>Регистрационный орган: Гомельский городской исполнительный комитет</p>
+            </div>
+
+            <div class="footer-col footer-schedule">
+                <h3>Режим работы</h3>
+                <table class="schedule-table">
+                    <thead>
+                        <tr><th>День</th><th>Время</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>Пн - Пт</td><td>08:30 - 17:30</td></tr>
+                        <tr><td>Сб - Вс</td><td>Выходной</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="footer-col footer-contacts">
+                <h3>Контакты</h3>
+                <p><i class="fa fa-phone"></i> +375 (29) 677-77-46 (A1, Viber)</p>
+                <p><i class="fa fa-envelope"></i> sm6777746@mail.ru</p>
+                <p><i class="fa fa-map-marker"></i> ул. Текстильная 10Б, Гомель, Беларусь</p>
+                <p><i class="fa fa-user-circle"></i> Контактное лицо: Виктор Леонидович</p>
+            </div>
+        </div>
+    </footer>
+    {% block extra_scripts %}{% endblock %}
+</body>
+</html>

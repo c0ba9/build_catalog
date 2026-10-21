@@ -1,0 +1,111 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<section class="hero-banner">
+    <div class="container">
+        <h1>Кровельные и стеновые материалы в Гомеле</h1>
+        <p>Качественные материалы напрямую от производителей. Расчет, доставка и гарантия.</p>
+        <a href="{% url 'catalog' %}" class="btn btn-success">Перейти в каталог</a>
+    </div>
+</section>
+
+<!-- Категории продукции (Плитки с фото и видимыми подкатегориями) -->
+<section class="categories-section container" id="catalog">
+    <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-bottom: 20px;">
+        <h2 class="section-title" style="margin: 0;">Категории продукции</h2>
+        <a href="{% url 'catalog' %}?all_products=1" class="btn btn-success" style="font-size: 13px; padding: 7px 16px; text-decoration: none; border-radius: 4px; color: #fff; background: #28a745; display: inline-flex; align-items: center; gap: 6px; font-weight: 600;">
+            <i class="fa fa-th-large"></i> Все товары
+        </a>
+    </div>
+    
+    <div class="category-portal-grid">
+        {% for category in categories %}
+        <a href="{% url 'category_detail' category.slug %}" class="category-portal-card">
+            <div class="category-portal-thumb">
+                {% if category.image %}
+                <img src="{{ category.image.url }}" alt="{{ category.name }}" loading="lazy" decoding="async">
+                {% else %}
+                <img src="{% static 'img/default-image.jpg' %}" alt="{{ category.name }}" loading="lazy" decoding="async">
+                {% endif %}
+                {% if category.children.all %}
+                <span class="category-portal-badge">{{ category.children.all|length }} раздела</span>
+                {% endif %}
+            </div>
+            <div class="category-portal-info">
+                <h3 class="category-portal-title">{{ category.name }}</h3>
+
+                {% if category.children.all %}
+                <div class="category-portal-sublist" style="margin-top: 8px; margin-bottom: 10px; padding-top: 8px; border-top: 1px solid #f0f0f0;">
+                    <ul style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 3px;">
+                        {% for subcat in category.children.all %}
+                        <li style="font-size: 12px; color: #444; display: flex; align-items: center; gap: 4px;">
+                            <span style="color: #28a745; font-weight: bold;">›</span> {{ subcat.name }}
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% endif %}
+
+                <div class="category-portal-footer">
+                    {% if category.children.all %}
+                    <span class="category-portal-subtext">Смотреть разделы</span>
+                    {% else %}
+                    <span class="category-portal-subtext">Смотреть товары</span>
+                    {% endif %}
+                    <span class="category-portal-arrow"><i class="fa fa-arrow-right"></i></span>
+                </div>
+            </div>
+        </a>
+        {% empty %}
+        <p>Категории пока не добавлены.</p>
+        {% endfor %}
+    </div>
+</section>
+
+<!-- Популярные товары -->
+{% if featured_products %}
+<section class="featured-products container">
+    <h2 class="section-title">Популярные товары</h2>
+    <div class="products-grid">
+        {% for product in featured_products %}
+        <div class="product-card">
+            <div>
+                <a href="{{ product.get_absolute_url }}">
+                    <div class="product-image">
+                        {% if product.image %}
+                        <img src="{{ product.image.url }}" alt="{{ product.title }}" loading="lazy" decoding="async">
+                        {% else %}
+                        <img src="{% static 'img/default-image.jpg' %}" alt="{{ product.title }}" loading="lazy" decoding="async">
+                        {% endif %}
+                    </div>
+                </a>
+
+                <div class="product-info">
+                    <span class="product-category">{{ product.category.name }}</span>
+                    <h4 class="product-title">
+                        <a href="{{ product.get_absolute_url }}">{{ product.title }}</a>
+                    </h4>
+
+                    <div class="product-availability {{ product.availability_css_class }}">
+                        {% if product.is_available %}
+                            <i class="fa fa-check-circle"></i>
+                        {% elif product.is_on_order %}
+                            <i class="fa fa-clock-o"></i>
+                        {% endif %}
+                        {{ product.availability_text }}
+                    </div>
+
+                    <div class="product-price">
+                        {{ product.price }} руб. <span>/ {{ product.get_unit_display }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <a href="{{ product.get_absolute_url }}" class="btn btn-dark">Подробнее</a>
+        </div>
+        {% endfor %}
+    </div>
+</section>
+{% endif %}
+{% endblock %}
